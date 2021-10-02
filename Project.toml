@@ -1,0 +1,4 @@
+name = "PoissonSolver"
+uuid = "333ac5fb-9ca8-4109-ae2c-88ac1dd5ecab"
+authors = ["Thomas Burton <tburton5572@gmail.com>"]
+version = "0.1.0"
