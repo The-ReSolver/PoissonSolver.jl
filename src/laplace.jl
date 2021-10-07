@@ -10,12 +10,9 @@ export Laplace
 struct Laplace{Ny, Nz, BC, LU}
     lus::Vector{LU}
 
-    function Laplace(Nz::Int, Ny::Int, BC::Symbol)
-        # construct chebyshev matrix
-        chebmat = cheb_double_diffmat(Ny)
-
+    function Laplace(Nz::Int, Ny::Int, BC::Symbol, diffmat::AbstractMatrix=cheb_double_diffmat(Ny))
         # initialise an empty vector of matrices
-        vec = [LinearAlgebra.lu!(apply_BC!(chebmat - I*(nz*β)^2, BC)) for nz in 0:Nz]
+        vec = [LinearAlgebra.lu!(apply_BC!(diffmat - I*(nz*β)^2, BC)) for nz in 0:Nz]
 
         return new{Ny, Nz, BC, eltype(vec)}(vec)
     end
@@ -43,7 +40,6 @@ function apply_BC!(a::AbstractMatrix, BC::Symbol)
     end
 end
 
-# TODO: What am i looping over
 """
 Solve the Poisson equation for a 2D spatio-temporal scalar field with boundary
 conditions imposed on the Laplace operator before passing as an argument. Only
@@ -54,6 +50,7 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny}, rhs::AbstractArr
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
+    # THE ZERO-ZERO MODE IS DISCARDED!
     for nt in 0:Nt, nz in 0:Nz
         # impose boundary conditions on RHS of equation
         _rhs .= rhs[:, nz, nt]; _rhs[1] = rhs[Ny] = 0
