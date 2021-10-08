@@ -1,4 +1,5 @@
-# use any packages required by the tests here
 using PoissonSolver
+using Random
+using Test
 
-# include("test1.jl") here to run the test file
+include("test_diffmat.jl")

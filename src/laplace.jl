@@ -3,7 +3,7 @@
 
 import LinearAlgebra
 
-export Laplace
+export Laplace, solve!
 
 # TODO: Unit tests for the construction of Chebyshev differentation matrices!
 
@@ -45,7 +45,7 @@ Solve the Poisson equation for a 2D spatio-temporal scalar field with boundary
 conditions imposed on the Laplace operator before passing as an argument. Only
 homogeneous Dirichlet or Neumann boundary conditions are treated.
 """
-function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny}, rhs::AbstractArray{T, 3}) where {Ny}
+function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny}, rhs::AbstractArray{T, 3}) where {T, Ny}
     # initialise intermediate vectors to minimise memory assignment
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
