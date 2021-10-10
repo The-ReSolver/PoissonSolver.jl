@@ -1,6 +1,6 @@
 module PoissonSolver
 
-using LinearAlgebra
+import LinearAlgebra
 
 include("cheb_diffmat.jl")
 include("laplace.jl")

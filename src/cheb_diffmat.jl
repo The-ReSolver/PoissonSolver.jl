@@ -84,5 +84,5 @@ U. Ehrenstein, R. Peyret (1989), A Chebyshev collocation method for the Navier-
 Stokes equations with application to double-diffusive convection.
 """
 function cheb_single_diffmat(Ny::Int, row::Int, ::Type{T}=Float64) where {T}
-    return cheb_diffmat(Ny::Int, T)[row, :]
+    return cheb_single_diffmat(Ny::Int, T)[row, :]
 end

@@ -1,18 +1,14 @@
 # This file contains the custom type for the Laplace operator with either
 # Dirichlet or Neumann boundary conditions.
 
-import LinearAlgebra
-
 export Laplace, solve!
-
-# TODO: Unit tests for the construction of Chebyshev differentation matrices!
 
 struct Laplace{Ny, Nz, BC, LU}
     lus::Vector{LU}
 
-    function Laplace(Nz::Int, Ny::Int, BC::Symbol, diffmat::AbstractMatrix=cheb_double_diffmat(Ny))
-        # initialise an empty vector of matrices
-        vec = [LinearAlgebra.lu!(apply_BC!(diffmat - I*(nz*β)^2, BC)) for nz in 0:Nz]
+    function Laplace(Nz::Int, Ny::Int, β::Float64, BC::Symbol, diffmat::AbstractMatrix=cheb_double_diffmat(Ny))
+        # loop over spanwise wavenumbers and take LU decomposition of laplace operator
+        vec = [LinearAlgebra.lu!(_apply_BC!(diffmat - LinearAlgebra.I*(nz*β)^2, BC), Val(false)) for nz in 0:Nz]
 
         return new{Ny, Nz, BC, eltype(vec)}(vec)
     end
@@ -25,12 +21,12 @@ boundary conditions.
 function _apply_BC!(a::AbstractMatrix, BC::Symbol)
     if BC == :Dirichlet
         # set first row to all zero except first element
-        a[1, :] .= 0
-        a[1, 1] = 1
+        a[1, :] .= 0.0
+        a[1, 1] = 1.0
 
         # set last row to all zero except first element
-        a[end, :] .= 0
-        a[end, end] = 1
+        a[end, :] .= 0.0
+        a[end, end] = 1.0
     elseif BC == :Neumann
         # set the first and last row to the first row of the first order differentation matrix
         a[1, :] = cheb_single_diffmat(size(a, 1), 1)
@@ -38,6 +34,8 @@ function _apply_BC!(a::AbstractMatrix, BC::Symbol)
     else
         throw(ArgumentError("Not a valid boundary condition: "*string(BC)))
     end
+
+    return a
 end
 
 """
