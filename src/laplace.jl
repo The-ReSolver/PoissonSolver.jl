@@ -3,10 +3,14 @@
 
 export Laplace, solve!
 
+# TODO: Solver currently assumes homogeneous BCs, may not be true for Neumann case!!!
+# TODO: BCs need to take in the desired differentiation matrix as well
+# TODO: Tests are broken, need to import chebyshev stuff from another place
+
 struct Laplace{Ny, Nz, BC, LU}
     lus::Vector{LU}
 
-    function Laplace(Nz::Int, Ny::Int, β::Float64, BC::Symbol, diffmat::AbstractMatrix=cheb_double_diffmat(Ny))
+    function Laplace(Nz::Int, Ny::Int, β::Float64, BC::Symbol, diffmat::AbstractMatrix)
         # loop over spanwise wavenumbers and take LU decomposition of laplace operator
         vec = [LinearAlgebra.lu!(_apply_BC!(diffmat - LinearAlgebra.I*(nz*β)^2, BC), Val(false)) for nz in 0:Nz]
 
