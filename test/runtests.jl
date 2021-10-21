@@ -1,4 +1,5 @@
 using PoissonSolver
+using ChebUtils
 using Random
 using Test
 

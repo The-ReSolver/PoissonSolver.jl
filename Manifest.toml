@@ -9,6 +9,14 @@ git-tree-sha1 = "61adeb0823084487000600ef8b1c00cc2474cd47"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 version = "1.2.0"
 
+[[ChebUtils]]
+deps = ["Random", "Test"]
+git-tree-sha1 = "89f4ffe0b2419af08a3c174a11468ce032dde5fb"
+repo-rev = "main"
+repo-url = "https://github.com/The-ReSolver/ChebUtils.jl.git"
+uuid = "5c307136-fb89-411d-b568-fbf16049e5ad"
+version = "0.1.0"
+
 [[Dates]]
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"

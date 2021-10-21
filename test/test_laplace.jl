@@ -5,18 +5,17 @@
     Nz = rand(0:50)
     Ny = rand(2:50)
     β = abs(randn())
+    D = cheb_single_diffmat(Ny)
+    DD = cheb_double_diffmat(Ny)
     rinner = rand(2:(Ny - 1))
 
     # initialise operators
-    laplace_dirichlet = Laplace(Nz, Ny, β, :Dirichlet)
-    laplace_neumann = Laplace(Nz, Ny, β, :Neumann)
-
-    # check error thrown for wrong boundary condition
-    @test_throws ArgumentError Laplace(Nz, Ny, β, :dunno)
+    laplace_dirichlet = Laplace(Nz, Ny, β, DD)
+    laplace_neumann = Laplace(Nz, Ny, β, DD, D)
 
     # correct size
-    @test size(laplace_dirichlet.lus) == (Nz + 1, )
-    @test size(laplace_neumann.lus) == (Nz + 1, )
+    @test size(laplace_dirichlet.lus) == ((Nz >> 1) + 2, )
+    @test size(laplace_neumann.lus) == ((Nz >> 1) + 2, )
     @test size(laplace_dirichlet.lus[1]) == (Ny, Ny)
     @test size(laplace_neumann.lus[1]) == (Ny, Ny)
 

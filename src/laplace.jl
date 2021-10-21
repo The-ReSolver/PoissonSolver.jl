@@ -3,51 +3,47 @@
 
 export Laplace, solve!
 
-# TODO: Solver currently assumes homogeneous BCs, may not be true for Neumann case!!!
-# TODO: BCs need to take in the desired differentiation matrix as well
-# TODO: Tests are broken, need to import chebyshev stuff from another place
-
-struct Laplace{Ny, Nz, BC, LU}
+struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
-    function Laplace(Nz::Int, Ny::Int, β::Float64, BC::Symbol, diffmat::AbstractMatrix)
-        # loop over spanwise wavenumbers and take LU decomposition of laplace operator
-        vec = [LinearAlgebra.lu!(_apply_BC!(diffmat - LinearAlgebra.I*(nz*β)^2, BC), Val(false)) for nz in 0:Nz]
+    function Laplace(Nz::Int, Ny::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2), Val(false)) for nz in 0:((Nz >> 1) + 1)]
+        new{Ny, Nz, eltype(vec)}(vec)
+    end
 
-        return new{Ny, Nz, BC, eltype(vec)}(vec)
+    function Laplace(Nz::Int, Ny::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2, D), Val(false)) for nz in 0:((Nz >> 1) + 1)]
+        new{Ny, Nz, eltype(vec)}(vec)
     end
 end
 
 """
-Modify the provided array to impose the given either Dirichlet or Neumann
-boundary conditions.
+    Modify the provided array to impose Dirichlet boundary conditions.
 """
-function _apply_BC!(a::AbstractMatrix, BC::Symbol)
-    if BC == :Dirichlet
-        # set first row to all zero except first element
-        a[1, :] .= 0.0
-        a[1, 1] = 1.0
-
-        # set last row to all zero except first element
-        a[end, :] .= 0.0
-        a[end, end] = 1.0
-    elseif BC == :Neumann
-        # set the first and last row to the first row of the first order differentation matrix
-        a[1, :] = cheb_single_diffmat(size(a, 1), 1)
-        a[end, :] = cheb_single_diffmat(size(a, 1), size(a, 1))
-    else
-        throw(ArgumentError("Not a valid boundary condition: "*string(BC)))
-    end
-
+function _apply_BC!(a::AbstractMatrix)
+    a[1, :] .= 0.0
+    a[1, 1] = 1.0
+    a[end, :] .= 0.0
+    a[end, end] = 1.0
     return a
 end
 
 """
-Solve the Poisson equation for a 2D spatio-temporal scalar field with boundary
-conditions imposed on the Laplace operator before passing as an argument. Only
-homogeneous Dirichlet or Neumann boundary conditions are treated.
+    Modify the provided array to impose Neumann boundary conditions.
 """
-function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny}, rhs::AbstractArray{T, 3}) where {T, Ny}
+function _apply_BC!(a::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T}
+    a[1, :] = D[1, :]
+    a[end, :] = D[end, :]
+    return a
+end
+
+"""
+    Solve the Poisson equation for a 2D spatio-temporal scalar field with
+    boundary conditions imposed on the Laplace operator before passing as an
+    argument. Only homogeneous Dirichlet or Neumann boundary conditions are
+    treated.
+"""
+function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz, Nt}, rhs::AbstractArray{T, 3}) where {T, Ny, Nz, Nt}
     # initialise intermediate vectors to minimise memory assignment
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
@@ -63,4 +59,6 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny}, rhs::AbstractArr
         # assign the solution to the input matrix
         phi[:, nz, nt] .= _phi
     end
+
+    return phi
 end
