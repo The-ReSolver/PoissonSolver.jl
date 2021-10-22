@@ -6,12 +6,12 @@ export Laplace, solve!
 struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
-    function Laplace(Nz::Int, Ny::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
+    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
         vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2), Val(false)) for nz in 0:((Nz >> 1) + 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
 
-    function Laplace(Nz::Int, Ny::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
+    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
         vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2, D), Val(false)) for nz in 0:((Nz >> 1) + 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
@@ -41,15 +41,18 @@ end
     argument. Only homogeneous Dirichlet or Neumann boundary conditions are
     treated.
 """
-function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz, Nt}, rhs::AbstractArray{T, 3}) where {T, Ny, Nz, Nt}
+function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::AbstractArray{T, 3}) where {T, Ny, Nz}
+    # extract temporal size
+    Nt = size(phi)[3]
+
     # initialise intermediate vectors to minimise memory assignment
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
     # THE ZERO-ZERO MODE IS DISCARDED!
-    for nt in 0:Nt, nz in 0:Nz
+    for nt in 1:Nt, nz in 1:((Nz >> 1) + 1)
         # impose boundary conditions on RHS of equation
-        _rhs .= rhs[:, nz, nt]; _rhs[1] = rhs[Ny] = 0
+        _rhs .= rhs[:, nz, nt]; _rhs[1] = _rhs[Ny] = 0
 
         # solve the poisson equation
         LinearAlgebra.ldiv!(_phi, laplace.lus[nz], _rhs)
