@@ -44,12 +44,12 @@ end
 function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::AbstractArray{T, 3}) where {T, Ny, Nz}
     # extract temporal size
     Nt = size(phi)[3]
+    # _Nz, _Nt = size(phi)[2, 3]
 
     # initialise intermediate vectors to minimise memory assignment
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
-    # THE ZERO-ZERO MODE IS DISCARDED!
     for nt in 1:Nt, nz in 1:((Nz >> 1) + 1)
         # impose boundary conditions on RHS of equation
         _rhs .= rhs[:, nz, nt]; _rhs[1] = _rhs[Ny] = 0
