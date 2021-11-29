@@ -37,22 +37,54 @@ end
 
 """
     Solve the Poisson equation for a 2D spatio-temporal scalar field with
-    boundary conditions imposed on the Laplace operator before passing as an
-    argument. Only homogeneous Dirichlet or Neumann boundary conditions are
-    treated.
+    homogeneous boundary conditions imposed on the Laplace operator before
+    passing as an argument.
 """
-function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::AbstractArray{T, 3}) where {T, Ny, Nz}
+function solve!(phi::AbstractArray{T, 3},
+                laplace::Laplace{Ny, Nz},
+                rhs::AbstractArray{T, 3}) where {T, Ny, Nz}
     # extract temporal size
-    Nt = size(phi)[3]
-    # _Nz, _Nt = size(phi)[2, 3]
+    _Nt = size(phi)[3]
 
-    # initialise intermediate vectors to minimise memory assignment
+    # initialise intermediate vectors
     _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
-    for nt in 1:Nt, nz in 1:((Nz >> 1) + 1)
-        # impose boundary conditions on RHS of equation
+    for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
+        # impose boundary conditions
         _rhs .= rhs[:, nz, nt]; _rhs[1] = _rhs[Ny] = 0
+
+        # solve the poisson equation
+        LinearAlgebra.ldiv!(_phi, laplace.lus[nz], _rhs)
+
+        # assign the solution to the input matrix
+        phi[:, nz, nt] .= _phi
+    end
+
+    return phi
+end
+
+"""
+    Solve the Poisson equation for a 2D spatio-temporal scalar field with
+    inhomogeneous boundary conditions imposed on the Laplace operator before
+    passing as an argument.
+"""
+function solve!(phi::AbstractArray{T, 3},
+                laplace::Laplace{Ny, Nz},
+                rhs::AbstractArray{T, 3},
+                bc_data::NTuple{2, AbstractMatrix{T}}) where {T, Ny, Nz}
+    # extract temporal size
+    _Nt = size(phi)[3]
+
+    # intialise intermediate vectors
+    _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
+
+    # loop over temporal and spanwise wavenumbers
+    for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
+        # impose boundary conditions
+        _rhs .= rhs[:, nz, nt]
+        _rhs[1] = bc_data[1][nz, nt]
+        _rhs[Ny] = bc_data[2][nz, nt]
 
         # solve the poisson equation
         LinearAlgebra.ldiv!(_phi, laplace.lus[nz], _rhs)

@@ -39,11 +39,7 @@
     # -------------------------------------------------------------------------
     # intiialise constants
     β2 = 1.0
-    Ny2 = 50; Nz2 = 50; Nt2 = 50
-
-    # initialise functions
-    sol1_fun(y, z, t) = (1 - y^2)
-    rhs1_fun(y, z, t) = -2.0
+    Ny2 = 64; Nz2 = 64; Nt2 = 64
 
     # chebyshev points and differentiation matrix
     D2 = chebdiff(Ny2); DD2 = chebddiff(Ny2)
@@ -57,60 +53,129 @@
     laplace2 = Laplace(Ny2, Nz2, β2, DD2, D2)
 
     # -------------------------------------------------------------------------
-    # Dirichlet
+    # Dirichlet (homogeneous BC)
     # -------------------------------------------------------------------------
     # initialise functions
-    sol5_fun(y, z, t) = (1 - y^2)*exp(cos(z))*atan(sin(t))
-    rhs5_fun(y, z, t) = (-2*exp(cos(z)) + (sin(z)^2 - cos(z))*(1 - y^2)*exp(cos(z)))*atan(sin(t))
+    sol1_fun(y, z, t) = (1 - y^2)*exp(cos(z))*atan(sin(t))
+    rhs1_fun(y, z, t) = (-2*exp(cos(z)) + (sin(z)^2 - cos(z))*(1 - y^2)*exp(cos(z)))*atan(sin(t))
 
-    # initialise solution field
-    ϕ5_spec = SpectralField(grid)
-    ϕ5_phys = PhysicalField(grid)
+    # # initialise solution field
+    ϕ1_spec = SpectralField(grid)
+    ϕ1_phys = PhysicalField(grid)
 
-    # initialise FFT plans
-    FFT = FFTPlan!(ϕ5_phys, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(ϕ5_spec, flags = FFTW.ESTIMATE)
+    # # initialise FFT plans
+    FFT = FFTPlan!(ϕ1_phys, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(ϕ1_spec, flags = FFTW.ESTIMATE)
 
-    # initialise RHS field
-    rhs5_spec = SpectralField(grid)
-    rhs5_phys = PhysicalField(grid, rhs5_fun)
+    # # initialise RHS field
+    rhs1_spec = SpectralField(grid)
+    rhs1_phys = PhysicalField(grid, rhs1_fun)
 
     # populate spectral version of RHS
-    FFT(rhs5_spec, rhs5_phys)
+    FFT(rhs1_spec, rhs1_phys)
 
     # find solution
-    solve!(ϕ5_spec, laplace1, rhs5_spec)
-    IFFT(ϕ5_phys, ϕ5_spec)
+    solve!(ϕ1_spec, laplace1, rhs1_spec)
+    IFFT(ϕ1_phys, ϕ1_spec)
 
-    @test ϕ5_phys ≈ PhysicalField(grid, sol5_fun)
+    @test ϕ1_phys ≈ PhysicalField(grid, sol1_fun)
 
     # -------------------------------------------------------------------------
-    # Neumann
+    # Neumann (homogeneous BC)
     # -------------------------------------------------------------------------
     # initialise functions
-    sol6_fun(y, z, t) = y*(((y^2)/3) - 1)*exp(cos(z))*atan(sin(t))
-    rhs6_fun(y, z, t) = (2*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(((y^2)/3) - 1)*exp(cos(z)))*atan(sin(t))
+    sol2_fun(y, z, t) = y*(((y^2)/3) - 1)*exp(cos(z))*atan(sin(t))
+    rhs2_fun(y, z, t) = (2*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(((y^2)/3) - 1)*exp(cos(z)))*atan(sin(t))
 
     # initialise solution field
-    ϕ6_spec = SpectralField(grid)
-    ϕ6_phys = PhysicalField(grid)
-    ϕ6_sol = PhysicalField(grid, sol6_fun)
+    ϕ2_spec = SpectralField(grid)
+    ϕ2_phys = PhysicalField(grid)
+    ϕ2_sol = PhysicalField(grid, sol2_fun)
 
     # initialise RHS field
-    rhs6_spec = SpectralField(grid)
-    rhs6_phys = PhysicalField(grid, rhs6_fun)
+    rhs2_spec = SpectralField(grid)
+    rhs2_phys = PhysicalField(grid, rhs2_fun)
 
     # populate spectral version of RHS
-    FFT(rhs6_spec, rhs6_phys)
+    FFT(rhs2_spec, rhs2_phys)
 
     # find solution
-    solve!(ϕ6_spec, laplace2, rhs6_spec)
-    IFFT(ϕ6_phys, ϕ6_spec)
+    solve!(ϕ2_spec, laplace2, rhs2_spec)
+    IFFT(ϕ2_phys, ϕ2_spec)
 
     # modify solution with offset (arbitrary when using Neumann BCs)
     for i in 1:Nt2
-        ϕ6_phys[:, :, i] = ϕ6_phys[:, :, i] .- (ϕ6_phys[1, 1, i] - ϕ6_sol[1, 1, i])
+        ϕ2_phys[:, :, i] = ϕ2_phys[:, :, i] .- (ϕ2_phys[1, 1, i] - ϕ2_sol[1, 1, i])
     end
 
-    @test ϕ6_phys ≈ PhysicalField(grid, sol6_fun)
+    @test ϕ2_phys ≈ PhysicalField(grid, sol2_fun)
+
+    # -------------------------------------------------------------------------
+    # Dirichlet (inhomogeneous BC)
+    # -------------------------------------------------------------------------
+    # initialise functions
+    sol3_fun(y, z, t) = (2.0 - y^2)*exp(cos(z))*atan(sin(t))
+    rhs3_fun(y, z, t) = (-2.0*exp(cos(z)) + (sin(z)^2 - cos(z))*(2 - y^2)*exp(cos(z)))*atan(sin(t))
+    BC_dir_fun(y, z, t) = exp(cos(z))*atan(sin(t))
+
+    # initialise solution field
+    ϕ3_spec = SpectralField(grid)
+    ϕ3_phys = PhysicalField(grid)
+
+    # initialise RHS field
+    rhs3_spec = SpectralField(grid)
+    rhs3_phys = PhysicalField(grid, rhs3_fun)
+
+    # populate spectral version of RHS
+    FFT(rhs3_spec, rhs3_phys)
+
+    # intialise boundary condition
+    BC_dir_phys = PhysicalField(grid, BC_dir_fun)
+    BC_dir_spec = SpectralField(grid)
+    FFT(BC_dir_spec, BC_dir_phys)
+    BC_dir = (BC_dir_spec[1, :, :], BC_dir_spec[1, :, :])
+
+    # find solution
+    solve!(ϕ3_spec, laplace1, rhs3_spec, BC_dir)
+    IFFT(ϕ3_phys, ϕ3_spec)
+
+    @test ϕ3_phys ≈ PhysicalField(grid, sol3_fun)
+
+    # -------------------------------------------------------------------------
+    # Neumann (inhomogeneous BC)
+    # -------------------------------------------------------------------------
+    # initialise functions
+    sol4_fun(y, z, t) = y*(y^2 - 2)*exp(cos(z))*atan(sin(t))
+    rhs4_fun(y, z, t) = (6*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(y^2 - 2)*exp(cos(z)))*atan(sin(t))
+    # NOTE: this has to be negative to work properly
+    BC_neu_fun(y, z, t) = -exp(cos(z))*atan(sin(t))
+
+    # initialise solution field
+    ϕ4_spec = SpectralField(grid)
+    ϕ4_phys = PhysicalField(grid)
+    ϕ4_sol = PhysicalField(grid, sol4_fun)
+
+    # initialise RHS field
+    rhs4_spec = SpectralField(grid)
+    rhs4_phys = PhysicalField(grid, rhs4_fun)
+
+    # populate spectral version of RHS
+    FFT(rhs4_spec, rhs4_phys)
+
+    # initialise boundary condition
+    BC_neu_phys = PhysicalField(grid, BC_neu_fun)
+    BC_neu_spec = SpectralField(grid)
+    FFT(BC_neu_spec, BC_neu_phys)
+    BC_neu = (BC_neu_spec[1, :, :], BC_neu_spec[1, :, :])
+
+    # find solution
+    solve!(ϕ4_spec, laplace2, rhs4_spec, BC_neu)
+    IFFT(ϕ4_phys, ϕ4_spec)
+
+    # modify solution with offset (arbitrary when using Neumann BCs)
+    for i in 1:Nt2
+        ϕ4_phys[:, :, i] = ϕ4_phys[:, :, i] .- (ϕ4_phys[1, 1, i] - ϕ4_sol[1, 1, i])
+    end
+
+    @test ϕ4_phys ≈ PhysicalField(grid, sol4_fun)
 end
