@@ -46,7 +46,7 @@
     y = chebpts(Ny2)
 
     # initialise grid
-    grid = Grid(y, Nz2, Nt2, D2, DD2, rand(Ny2))
+    grid = Grid(y, Nz2, Nt2, D2, DD2, rand(Ny2), β2, 0.0)
 
     # initialise Laplace operators
     laplace1 = Laplace(Ny2, Nz2, β2, DD2)
@@ -147,8 +147,7 @@
     # initialise functions
     sol4_fun(y, z, t) = y*(y^2 - 2)*exp(cos(z))*atan(sin(t))
     rhs4_fun(y, z, t) = (6*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(y^2 - 2)*exp(cos(z)))*atan(sin(t))
-    # NOTE: this has to be negative to work properly
-    BC_neu_fun(y, z, t) = -exp(cos(z))*atan(sin(t))
+    BC_neu_fun(y, z, t) = exp(cos(z))*atan(sin(t))
 
     # initialise solution field
     ϕ4_spec = SpectralField(grid)
