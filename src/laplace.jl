@@ -7,12 +7,12 @@ struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
     function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2), Val(false)) for nz in 0:((Nz >> 1) + 1)]
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2), Val(false)) for nz in 0:(Nz >> 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
 
     function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2, D), Val(false)) for nz in 0:((Nz >> 1) + 1)]
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - LinearAlgebra.I*(nz*β)^2, D), Val(false)) for nz in 0:(Nz >> 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
 end

@@ -1,6 +1,6 @@
 # This file contains the test for the custom (discrete) Laplace operator type.
 
-@testset "Laplace operator tests" begin
+@testset "Laplace operator initialisation       " begin
     # generate random numbers
     Ny = rand(2:50)
     Nz = rand(2:50)
@@ -14,8 +14,8 @@
     laplace_neumann = Laplace(Ny, Nz, β, DD, D)
 
     # correct size
-    @test size(laplace_dirichlet.lus) == ((Nz >> 1) + 2, )
-    @test size(laplace_neumann.lus) == ((Nz >> 1) + 2, )
+    @test size(laplace_dirichlet.lus) == ((Nz >> 1) + 1,)
+    @test size(laplace_neumann.lus) == ((Nz >> 1) + 1,)
     @test size(laplace_dirichlet.lus[1]) == (Ny, Ny)
     @test size(laplace_neumann.lus[1]) == (Ny, Ny)
 
@@ -33,101 +33,130 @@
     double_diffmat = chebddiff(Ny)
     @test laplace_dirichlet_recon[rinner, :] ≈ double_diffmat[rinner, :]
     @test laplace_neumann_recon[rinner, :] ≈ double_diffmat[rinner, :]
+end
 
-    # -------------------------------------------------------------------------
-    # Initialise Poisson solver
-    # -------------------------------------------------------------------------
+@testset "Dirichlet homogeneous BC solution     " begin
     # intiialise constants
-    β2 = 1.0
-    Ny2 = 64; Nz2 = 64; Nt2 = 64
+    β = 1.0
+    Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    D2 = chebdiff(Ny2); DD2 = chebddiff(Ny2)
-    y = chebpts(Ny2)
+    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = chebpts(Ny)
 
     # initialise grid
-    grid = Grid(y, Nz2, Nt2, D2, DD2, rand(Ny2), β2, 0.0)
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
 
     # initialise Laplace operators
-    laplace1 = Laplace(Ny2, Nz2, β2, DD2)
-    laplace2 = Laplace(Ny2, Nz2, β2, DD2, D2)
+    laplace = Laplace(Ny, Nz, β, DD2)
 
-    # -------------------------------------------------------------------------
-    # Dirichlet (homogeneous BC)
-    # -------------------------------------------------------------------------
+    # initialise FFT plans
+    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+
     # initialise functions
-    sol1_fun(y, z, t) = (1 - y^2)*exp(cos(z))*atan(sin(t))
-    rhs1_fun(y, z, t) = (-2*exp(cos(z)) + (sin(z)^2 - cos(z))*(1 - y^2)*exp(cos(z)))*atan(sin(t))
-
-    # # initialise solution field
-    ϕ1_spec = SpectralField(grid)
-    ϕ1_phys = PhysicalField(grid)
-
-    # # initialise FFT plans
-    FFT = FFTPlan!(ϕ1_phys, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(ϕ1_spec, flags = FFTW.ESTIMATE)
-
-    # # initialise RHS field
-    rhs1_spec = SpectralField(grid)
-    rhs1_phys = PhysicalField(grid, rhs1_fun)
-
-    # populate spectral version of RHS
-    FFT(rhs1_spec, rhs1_phys)
-
-    # find solution
-    solve!(ϕ1_spec, laplace1, rhs1_spec)
-    IFFT(ϕ1_phys, ϕ1_spec)
-
-    @test ϕ1_phys ≈ PhysicalField(grid, sol1_fun)
-
-    # -------------------------------------------------------------------------
-    # Neumann (homogeneous BC)
-    # -------------------------------------------------------------------------
-    # initialise functions
-    sol2_fun(y, z, t) = y*(((y^2)/3) - 1)*exp(cos(z))*atan(sin(t))
-    rhs2_fun(y, z, t) = (2*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(((y^2)/3) - 1)*exp(cos(z)))*atan(sin(t))
+    sol_fun(y, z, t) = (1 - y^2)*exp(cos(z))*atan(sin(t))
+    rhs_fun(y, z, t) = (-2*exp(cos(z)) + (sin(z)^2 - cos(z))*(1 - y^2)*exp(cos(z)))*atan(sin(t))
 
     # initialise solution field
-    ϕ2_spec = SpectralField(grid)
-    ϕ2_phys = PhysicalField(grid)
-    ϕ2_sol = PhysicalField(grid, sol2_fun)
+    ϕ_spec = SpectralField(grid)
+    ϕ_phys = PhysicalField(grid)
 
     # initialise RHS field
-    rhs2_spec = SpectralField(grid)
-    rhs2_phys = PhysicalField(grid, rhs2_fun)
+    rhs_spec = SpectralField(grid)
+    rhs_phys = PhysicalField(grid, rhs_fun)
 
     # populate spectral version of RHS
-    FFT(rhs2_spec, rhs2_phys)
+    FFT(rhs_spec, rhs_phys)
 
     # find solution
-    solve!(ϕ2_spec, laplace2, rhs2_spec)
-    IFFT(ϕ2_phys, ϕ2_spec)
+    solve!(ϕ_spec, laplace, rhs_spec)
+    IFFT(ϕ_phys, ϕ_spec)
+
+    @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
+end
+
+@testset "Neumann homogeneous BC solution       " begin
+    # intiialise constants
+    β = 1.0
+    Ny = 64; Nz = 64; Nt = 64
+
+    # chebyshev points and differentiation matrix
+    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = chebpts(Ny)
+
+    # initialise grid
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+
+    # initialise Laplace operators
+    laplace = Laplace(Ny, Nz, β, DD2, D2)
+
+    # initialise FFT plans
+    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+
+    # initialise functions
+    sol_fun(y, z, t) = y*(((y^2)/3) - 1)*exp(cos(z))*atan(sin(t))
+    rhs_fun(y, z, t) = (2*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(((y^2)/3) - 1)*exp(cos(z)))*atan(sin(t))
+
+    # initialise solution field
+    ϕ_spec = SpectralField(grid)
+    ϕ_phys = PhysicalField(grid)
+    ϕ_sol = PhysicalField(grid, sol_fun)
+
+    # initialise RHS field
+    rhs_spec = SpectralField(grid)
+    rhs_phys = PhysicalField(grid, rhs_fun)
+
+    # populate spectral version of RHS
+    FFT(rhs_spec, rhs_phys)
+
+    # find solution
+    solve!(ϕ_spec, laplace, rhs_spec)
+    IFFT(ϕ_phys, ϕ_spec)
 
     # modify solution with offset (arbitrary when using Neumann BCs)
-    for i in 1:Nt2
-        ϕ2_phys[:, :, i] = ϕ2_phys[:, :, i] .- (ϕ2_phys[1, 1, i] - ϕ2_sol[1, 1, i])
+    for i in 1:Nt
+        ϕ_phys[:, :, i] = ϕ_phys[:, :, i] .- (ϕ_phys[1, 1, i] - ϕ_sol[1, 1, i])
     end
 
-    @test ϕ2_phys ≈ PhysicalField(grid, sol2_fun)
+    @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
+end
 
-    # -------------------------------------------------------------------------
-    # Dirichlet (inhomogeneous BC)
-    # -------------------------------------------------------------------------
+@testset "Dirichlet inhomogeneous BC solution   " begin
+    # intiialise constants
+    β = 1.0
+    Ny = 64; Nz = 64; Nt = 64
+
+    # chebyshev points and differentiation matrix
+    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = chebpts(Ny)
+
+    # initialise grid
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+
+    # initialise Laplace operators
+    laplace = Laplace(Ny, Nz, β, DD2)
+
+    # initialise FFT plans
+    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+
     # initialise functions
-    sol3_fun(y, z, t) = (2.0 - y^2)*exp(cos(z))*atan(sin(t))
-    rhs3_fun(y, z, t) = (-2.0*exp(cos(z)) + (sin(z)^2 - cos(z))*(2 - y^2)*exp(cos(z)))*atan(sin(t))
+    sol_fun(y, z, t) = (2.0 - y^2)*exp(cos(z))*atan(sin(t))
+    rhs_fun(y, z, t) = (-2.0*exp(cos(z)) + (sin(z)^2 - cos(z))*(2 - y^2)*exp(cos(z)))*atan(sin(t))
     BC_dir_fun(y, z, t) = exp(cos(z))*atan(sin(t))
 
     # initialise solution field
-    ϕ3_spec = SpectralField(grid)
-    ϕ3_phys = PhysicalField(grid)
+    ϕ_spec = SpectralField(grid)
+    ϕ_phys = PhysicalField(grid)
 
     # initialise RHS field
-    rhs3_spec = SpectralField(grid)
-    rhs3_phys = PhysicalField(grid, rhs3_fun)
+    rhs_spec = SpectralField(grid)
+    rhs_phys = PhysicalField(grid, rhs_fun)
 
     # populate spectral version of RHS
-    FFT(rhs3_spec, rhs3_phys)
+    FFT(rhs_spec, rhs_phys)
 
     # intialise boundary condition
     BC_dir_phys = PhysicalField(grid, BC_dir_fun)
@@ -136,30 +165,47 @@
     BC_dir = (BC_dir_spec[1, :, :], BC_dir_spec[1, :, :])
 
     # find solution
-    solve!(ϕ3_spec, laplace1, rhs3_spec, BC_dir)
-    IFFT(ϕ3_phys, ϕ3_spec)
+    solve!(ϕ_spec, laplace, rhs_spec, BC_dir)
+    IFFT(ϕ_phys, ϕ_spec)
 
-    @test ϕ3_phys ≈ PhysicalField(grid, sol3_fun)
+    @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
+end
 
-    # -------------------------------------------------------------------------
-    # Neumann (inhomogeneous BC)
-    # -------------------------------------------------------------------------
+@testset "Neumann inhomogeneous BC solution     " begin
+    # intiialise constants
+    β = 1.0
+    Ny = 64; Nz = 64; Nt = 64
+
+    # chebyshev points and differentiation matrix
+    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = chebpts(Ny)
+
+    # initialise grid
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+
+    # initialise Laplace operators
+    laplace = Laplace(Ny, Nz, β, DD2, D2)
+
+    # initialise FFT plans
+    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+
     # initialise functions
-    sol4_fun(y, z, t) = y*(y^2 - 2)*exp(cos(z))*atan(sin(t))
-    rhs4_fun(y, z, t) = (6*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(y^2 - 2)*exp(cos(z)))*atan(sin(t))
+    sol_fun(y, z, t) = y*(y^2 - 2)*exp(cos(z))*atan(sin(t))
+    rhs_fun(y, z, t) = (6*y*exp(cos(z)) + (sin(z)^2 - cos(z))*y*(y^2 - 2)*exp(cos(z)))*atan(sin(t))
     BC_neu_fun(y, z, t) = exp(cos(z))*atan(sin(t))
 
     # initialise solution field
-    ϕ4_spec = SpectralField(grid)
-    ϕ4_phys = PhysicalField(grid)
-    ϕ4_sol = PhysicalField(grid, sol4_fun)
+    ϕ_spec = SpectralField(grid)
+    ϕ_phys = PhysicalField(grid)
+    ϕ_sol = PhysicalField(grid, sol_fun)
 
     # initialise RHS field
-    rhs4_spec = SpectralField(grid)
-    rhs4_phys = PhysicalField(grid, rhs4_fun)
+    rhs_spec = SpectralField(grid)
+    rhs_phys = PhysicalField(grid, rhs_fun)
 
     # populate spectral version of RHS
-    FFT(rhs4_spec, rhs4_phys)
+    FFT(rhs_spec, rhs_phys)
 
     # initialise boundary condition
     BC_neu_phys = PhysicalField(grid, BC_neu_fun)
@@ -168,13 +214,13 @@
     BC_neu = (BC_neu_spec[1, :, :], BC_neu_spec[1, :, :])
 
     # find solution
-    solve!(ϕ4_spec, laplace2, rhs4_spec, BC_neu)
-    IFFT(ϕ4_phys, ϕ4_spec)
+    solve!(ϕ_spec, laplace, rhs_spec, BC_neu)
+    IFFT(ϕ_phys, ϕ_spec)
 
     # modify solution with offset (arbitrary when using Neumann BCs)
-    for i in 1:Nt2
-        ϕ4_phys[:, :, i] = ϕ4_phys[:, :, i] .- (ϕ4_phys[1, 1, i] - ϕ4_sol[1, 1, i])
+    for i in 1:Nt
+        ϕ_phys[:, :, i] = ϕ_phys[:, :, i] .- (ϕ_phys[1, 1, i] - ϕ_sol[1, 1, i])
     end
 
-    @test ϕ4_phys ≈ PhysicalField(grid, sol4_fun)
+    @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
 end
