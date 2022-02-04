@@ -21,8 +21,8 @@ end
     Modify the provided array to impose Dirichlet boundary conditions.
 """
 function _apply_BC!(a::AbstractMatrix)
-    a[1, :] = Eye(size(a)[1], 1)
-    a[end, :] = Eye(size(a)[1], size(a)[1])
+    a[1, :] = Eye(a[1, :], 1)
+    a[end, :] = Eye(a[end, :])
     return a
 end
 

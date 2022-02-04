@@ -1,5 +1,3 @@
-# This file contains the test for the custom (discrete) Laplace operator type.
-
 @testset "Laplace operator initialisation       " begin
     # generate random numbers
     Ny = rand(2:50)
