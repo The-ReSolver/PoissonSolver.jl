@@ -34,7 +34,7 @@
 end
 
 @testset "Dirichlet homogeneous BC solution     " begin
-    # intiialise constants
+    # initialise constants
     β = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
@@ -75,7 +75,7 @@ end
 end
 
 @testset "Neumann homogeneous BC solution       " begin
-    # intiialise constants
+    # initialise constants
     β = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
@@ -118,11 +118,11 @@ end
         ϕ_phys[:, :, i] = ϕ_phys[:, :, i] .- (ϕ_phys[1, 1, i] - ϕ_sol[1, 1, i])
     end
 
-    @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
+    @test ϕ_phys ≈ ϕ_sol
 end
 
 @testset "Dirichlet inhomogeneous BC solution   " begin
-    # intiialise constants
+    # initialise constants
     β = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
@@ -170,7 +170,7 @@ end
 end
 
 @testset "Neumann inhomogeneous BC solution     " begin
-    # intiialise constants
+    # initialise constants
     β = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
@@ -219,6 +219,47 @@ end
     for i in 1:Nt
         ϕ_phys[:, :, i] = ϕ_phys[:, :, i] .- (ϕ_phys[1, 1, i] - ϕ_sol[1, 1, i])
     end
+
+    @test ϕ_phys ≈ ϕ_sol
+end
+
+@testset "Neumann homogeneous BC with no-slip   " begin
+    # initialise constants
+    β = 1.0
+    Ny = 64; Nz = 64; Nt = 64
+
+    # chebyshev points and differentiation matrix
+    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = chebpts(Ny)
+
+    # initialise grid
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+
+    # initialise Laplace operators
+    laplace = Laplace(Ny, Nz, β, DD2, D2, noslip=true)
+
+    # initialise FFT plans
+    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+
+    # initialise functions
+    sol_fun(y, z, t) = (sin(π*y)^2)*exp(cos(z))*atan(sin(t))
+    rhs_fun(y, z, t) = (2*(π^2)*cos(2*π*y) + (sin(π*y)^2)*((sin(z)^2) - cos(z)))*exp(cos(z))*atan(sin(t))
+
+    # initialise solution field
+    ϕ_spec = SpectralField(grid)
+    ϕ_phys = PhysicalField(grid)
+
+    # initialise RHS field
+    rhs_spec = SpectralField(grid)
+    rhs_phys = PhysicalField(grid, rhs_fun)
+
+    # populate spectral version of RHS
+    FFT(rhs_spec, rhs_phys)
+
+    # find solution
+    solve!(ϕ_spec, laplace, rhs_spec, true)
+    IFFT(ϕ_phys, ϕ_spec)
 
     @test ϕ_phys ≈ PhysicalField(grid, sol_fun)
 end

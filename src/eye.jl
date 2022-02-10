@@ -6,7 +6,7 @@ struct Eye{L, N, T} <: AbstractVector{T}
 end
 
 Eye(A::AbstractVector{T}, N) where {T} = Eye(length(A), N, T)
-Eye(A::AbstractVector{T}) where {T} = Eye(A, length(A))
+Eye(A::AbstractVector) = Eye(A, length(A))
 
 Base.size(::Eye{L}) where {L} = (L,)
 Base.IndexStyle(::Type{<:Eye}) = Base.IndexLinear()
