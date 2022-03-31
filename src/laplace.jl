@@ -1,12 +1,6 @@
 # This file contains the custom type for the Laplace operator with either
 # Dirichlet or Neumann boundary conditions.
 
-# TODO: redo with the following interface:
-#   - rename laplace to be a full poisson problem type
-#   - store all data about poisson problem in that type
-#   - define methods to update the problem data (rhs, bc)
-#   - single solve method that calls
-
 export Laplace, solve!
 
 struct Laplace{Ny, Nz, LU}
