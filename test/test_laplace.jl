@@ -49,8 +49,8 @@ end
     laplace = Laplace(Ny, Nz, β, DD2)
 
     # initialise FFT plans
-    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+    FFT = FFTPlan!(grid; flags=ESTIMATE)
+    IFFT = IFFTPlan!(grid; flags=ESTIMATE)
 
     # initialise functions
     sol_fun(y, z, t) = (1 - y^2)*exp(cos(z))*atan(sin(t))
@@ -90,8 +90,8 @@ end
     laplace = Laplace(Ny, Nz, β, DD2, D2)
 
     # initialise FFT plans
-    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+    FFT = FFTPlan!(grid, flags=ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags=ESTIMATE)
 
     # initialise functions
     sol_fun(y, z, t) = y*(((y^2)/3) - 1)*exp(cos(z))*atan(sin(t))
@@ -137,8 +137,8 @@ end
     laplace = Laplace(Ny, Nz, β, DD2)
 
     # initialise FFT plans
-    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+    FFT = FFTPlan!(grid, flags=ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags=ESTIMATE)
 
     # initialise functions
     sol_fun(y, z, t) = (2.0 - y^2)*exp(cos(z))*atan(sin(t))
@@ -185,8 +185,8 @@ end
     laplace = Laplace(Ny, Nz, β, DD2, D2)
 
     # initialise FFT plans
-    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+    FFT = FFTPlan!(grid, flags=ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags=ESTIMATE)
 
     # initialise functions
     sol_fun(y, z, t) = y*(y^2 - 2)*exp(cos(z))*atan(sin(t))
@@ -239,8 +239,8 @@ end
     laplace = Laplace(Ny, Nz, β, DD2, D2, noslip=true)
 
     # initialise FFT plans
-    FFT = FFTPlan!(grid, flags = FFTW.ESTIMATE)
-    IFFT = IFFTPlan!(grid, flags = FFTW.ESTIMATE)
+    FFT = FFTPlan!(grid, flags=ESTIMATE)
+    IFFT = IFFTPlan!(grid, flags=ESTIMATE)
 
     # initialise functions
     sol_fun(y, z, t) = (sin(π*y)^2)*exp(cos(z))*atan(sin(t))
