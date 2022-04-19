@@ -1,6 +1,6 @@
 module PoissonSolver
 
-import LinearAlgebra
+using LinearAlgebra
 
 include("eye.jl")
 include("laplace.jl")
