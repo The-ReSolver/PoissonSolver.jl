@@ -3,6 +3,7 @@
 
 export Laplace, solve!
 
+# FIXME: deprecated method of lu! being used
 struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
