@@ -1,8 +1,6 @@
 # This file contains the custom type for the Laplace operator with either
 # Dirichlet or Neumann boundary conditions.
 
-export Laplace, solve!
-
 # FIXME: deprecated method of lu! being used
 struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
