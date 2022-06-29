@@ -4,14 +4,14 @@ authors = ["Thomas Burton <tburton5572@gmail.com>"]
 version = "0.2.1"
 
 [deps]
-FDGrids = "28eb41cd-435a-4ede-8bdb-f2685fc03e8c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [extras]
+FDGrids = "28eb41cd-435a-4ede-8bdb-f2685fc03e8c"
 ChebUtils = "5c307136-fb89-411d-b568-fbf16049e5ad"
 Fields = "54c0c897-3bff-4ba2-acae-d4c1acf2c14a"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Random", "ChebUtils", "Fields"]
+test = ["Test", "Random", "ChebUtils", "Fields", "FDGrids"]
