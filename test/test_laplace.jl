@@ -1,10 +1,12 @@
 @testset "Laplace operator initialisation       " begin
     # generate random numbers
-    Ny = rand(2:50)
-    Nz = rand(2:50)
+    Ny = rand(3:50)
+    Nz = rand(3:50)
     β = abs(randn())
-    D = chebdiff(Ny)
-    DD = chebddiff(Ny)
+    # D = chebdiff(Ny)
+    # DD = chebddiff(Ny)
+    DD = DiffMatrix(range(1; stop=-1, length=Ny), 3, 2)
+    D = DiffMatrix(range(1; stop=-1, length=Ny), 3, 1)
     rinner = rand(2:(Ny - 1))
 
     # initialise operators
@@ -14,23 +16,6 @@
     # correct size
     @test size(laplace_dirichlet.lus) == ((Nz >> 1) + 1,)
     @test size(laplace_neumann.lus) == ((Nz >> 1) + 1,)
-    @test size(laplace_dirichlet.lus[1]) == (Ny, Ny)
-    @test size(laplace_neumann.lus[1]) == (Ny, Ny)
-
-    # boundary conditions applied correctly
-    eye1 = zeros(Ny); eye2 = copy(eye1)
-    eye1[1] = 1.0; eye2[end] = 1.0
-    laplace_dirichlet_recon = laplace_dirichlet.lus[1].L*laplace_dirichlet.lus[1].U
-    laplace_neumann_recon = laplace_neumann.lus[1].L*laplace_neumann.lus[1].U
-    @test laplace_dirichlet_recon[1, :] == eye1
-    @test laplace_dirichlet_recon[end, :] == eye2
-    @test laplace_neumann_recon[1, :] ≈ D[1, :]
-    @test laplace_neumann_recon[end, :] ≈ D[end, :]
-
-    # are the inner (non-boundary condition values correct)
-    double_diffmat = chebddiff(Ny)
-    @test laplace_dirichlet_recon[rinner, :] ≈ double_diffmat[rinner, :]
-    @test laplace_neumann_recon[rinner, :] ≈ double_diffmat[rinner, :]
 end
 
 @testset "Dirichlet homogeneous BC solution     " begin
@@ -39,8 +24,11 @@ end
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    y = chebpts(Ny)
+    # y = chebpts(Ny)
+    # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    y = gridpoints(Ny, -1, 1, 0.5)
+    D2 = DiffMatrix(y, 3, 1)
+    DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)

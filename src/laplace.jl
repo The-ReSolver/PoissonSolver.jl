@@ -1,16 +1,17 @@
 # This file contains the custom type for the Laplace operator with either
 # Dirichlet or Neumann boundary conditions.
 
+# TODO: add solver flag to constructors?
 struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
     function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2), NoPivot()) for nz in 0:(Nz >> 1)]
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2)) for nz in 0:(Nz >> 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
 
     function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2, D), NoPivot()) for nz in 0:(Nz >> 1)]
+        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2, D)) for nz in 0:(Nz >> 1)]
         new{Ny, Nz, eltype(vec)}(vec)
     end
 end
@@ -43,7 +44,7 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
     _Nt = size(phi)[3]
 
     # initialise intermediate vectors
-    _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
+    _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
     for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
@@ -51,10 +52,10 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
         _rhs .= rhs[:, nz, nt]; _rhs[1] = _rhs[Ny] = 0
 
         # solve the poisson equation
-        LinearAlgebra.ldiv!(_phi, laplace.lus[nz], _rhs)
+        LinearAlgebra.ldiv!(laplace.lus[nz], _rhs)
 
         # assign the solution to the input matrix
-        phi[:, nz, nt] .= _phi
+        phi[:, nz, nt] .= _rhs
     end
 
     return phi

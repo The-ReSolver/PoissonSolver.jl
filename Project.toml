@@ -4,6 +4,7 @@ authors = ["Thomas Burton <tburton5572@gmail.com>"]
 version = "0.1.1"
 
 [deps]
+FDGrids = "28eb41cd-435a-4ede-8bdb-f2685fc03e8c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [extras]
