@@ -1,7 +1,7 @@
 name = "PoissonSolver"
 uuid = "333ac5fb-9ca8-4109-ae2c-88ac1dd5ecab"
 authors = ["Thomas Burton <tburton5572@gmail.com>"]
-version = "0.1.1"
+version = "0.2.1"
 
 [deps]
 FDGrids = "28eb41cd-435a-4ede-8bdb-f2685fc03e8c"
