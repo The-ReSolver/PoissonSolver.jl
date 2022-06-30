@@ -1,17 +1,28 @@
 # This file contains the custom type for the Laplace operator with either
 # Dirichlet or Neumann boundary conditions.
 
-# TODO: add solver flag to constructors?
 struct Laplace{Ny, Nz, LU}
     lus::Vector{LU}
 
-    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2)) for nz in 0:(Nz >> 1)]
+    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, solver::Symbol=:banded) where {T<:AbstractFloat}
+        if solver == :banded
+            vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2)) for nz in 0:(Nz >> 1)]
+        elseif solver == :lapack
+            vec = [LinearAlgebra.lu(Complex{T}.(_apply_BC!(DD - I*(nz*β)^2))) for nz in 0:(Nz >> 1)]
+        else
+            throw(ArgumentError("$solver is not a valid solver!"))
+        end
         new{Ny, Nz, eltype(vec)}(vec)
     end
 
-    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}) where {T<:AbstractFloat}
-        vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2, D)) for nz in 0:(Nz >> 1)]
+    function Laplace(Ny::Int, Nz::Int, β::T, DD::AbstractMatrix{T}, D::AbstractMatrix{T}, solver::Symbol=:banded) where {T<:AbstractFloat}
+        if solver == :banded
+            vec = [LinearAlgebra.lu!(_apply_BC!(DD - I*(nz*β)^2, D)) for nz in 0:(Nz >> 1)]
+        elseif solver == :lapack
+            vec = [LinearAlgebra.lu(Complex{T}.(_apply_BC!(DD - I*(nz*β)^2, D))) for nz in 0:(Nz >> 1)]
+        else
+            throw(ArgumentError("$solver is not a valid solver!"))
+        end
         new{Ny, Nz, eltype(vec)}(vec)
     end
 end
@@ -71,7 +82,7 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
     _Nt = size(phi)[3]
 
     # intialise intermediate vectors
-    _phi = Vector{T}(undef, Ny); _rhs = Vector{T}(undef, Ny)
+    _rhs = Vector{T}(undef, Ny)
 
     # loop over temporal and spanwise wavenumbers
     for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
@@ -81,10 +92,10 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
         _rhs[Ny] = bc_data[2][nz, nt]
 
         # solve the poisson equation
-        LinearAlgebra.ldiv!(_phi, laplace.lus[nz], _rhs)
+        LinearAlgebra.ldiv!(laplace.lus[nz], _rhs)
 
         # assign the solution to the input matrix
-        phi[:, nz, nt] .= _phi
+        phi[:, nz, nt] .= _rhs
     end
 
     return phi

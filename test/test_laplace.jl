@@ -24,9 +24,8 @@ end
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    # y = chebpts(Ny)
+    y = chebpts(Ny)
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    y = gridpoints(Ny, -1, 1, 0.5)
     D2 = DiffMatrix(y, 3, 1)
     DD2 = DiffMatrix(y, 3, 2)
 
@@ -34,7 +33,8 @@ end
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
 
     # initialise Laplace operators
-    laplace = Laplace(Ny, Nz, β, DD2)
+    # laplace = Laplace(Ny, Nz, β, DD2, :banded)
+    laplace = Laplace(Ny, Nz, β, DD2, :lapack)
 
     # initialise FFT plans
     FFT = FFTPlan!(grid; flags=ESTIMATE)
@@ -68,14 +68,17 @@ end
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
     y = chebpts(Ny)
+    # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    D2 = DiffMatrix(y, 5, 1)
+    DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
 
     # initialise Laplace operators
-    laplace = Laplace(Ny, Nz, β, DD2, D2)
+    # laplace = Laplace(Ny, Nz, β, DD2, D2, :banded)
+    laplace = Laplace(Ny, Nz, β, DD2, D2, :lapack)
 
     # initialise FFT plans
     FFT = FFTPlan!(grid, flags=ESTIMATE)
@@ -115,14 +118,17 @@ end
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
     y = chebpts(Ny)
+    # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    D2 = DiffMatrix(y, 3, 1)
+    DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
 
     # initialise Laplace operators
-    laplace = Laplace(Ny, Nz, β, DD2)
+    # laplace = Laplace(Ny, Nz, β, DD2, :banded)
+    laplace = Laplace(Ny, Nz, β, DD2, :lapack)
 
     # initialise FFT plans
     FFT = FFTPlan!(grid, flags=ESTIMATE)
@@ -163,14 +169,17 @@ end
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
-    D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
     y = chebpts(Ny)
+    # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
+    D2 = DiffMatrix(y, 5, 1)
+    DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
 
     # initialise Laplace operators
-    laplace = Laplace(Ny, Nz, β, DD2, D2)
+    # laplace = Laplace(Ny, Nz, β, DD2, D2, :banded)
+    laplace = Laplace(Ny, Nz, β, DD2, D2, :lapack)
 
     # initialise FFT plans
     FFT = FFTPlan!(grid, flags=ESTIMATE)
