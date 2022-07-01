@@ -55,18 +55,25 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
     _Nt = size(phi)[3]
 
     # initialise intermediate vectors
-    _rhs = Vector{T}(undef, Ny)
+    _rhs = [Vector{T}(undef, Ny) for i in 1:Base.Threads.nthreads()]
 
     # loop over temporal and spanwise wavenumbers
-    for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
-        # impose boundary conditions
-        _rhs .= rhs[:, nz, nt]; _rhs[1] = _rhs[Ny] = 0
+    @inbounds begin 
+        Base.Threads.@threads for nt in 1:_Nt
+            id = Base.Threads.threadid()
+            @views for nz in 1:((Nz >> 1) + 1)
+                # impose boundary conditions
+                _rhs[id] .= rhs[:, nz, nt]
+                _rhs[id][1] = 0
+                _rhs[id][Ny] = 0
 
-        # solve the poisson equation
-        LinearAlgebra.ldiv!(laplace.lus[nz], _rhs)
+                # solve the poisson equation
+                LinearAlgebra.ldiv!(laplace.lus[nz], _rhs[id])
 
-        # assign the solution to the input matrix
-        phi[:, nz, nt] .= _rhs
+                # assign the solution to the input matrix
+                phi[:, nz, nt] .= _rhs[id]
+            end
+        end
     end
 
     return phi
@@ -82,20 +89,25 @@ function solve!(phi::AbstractArray{T, 3}, laplace::Laplace{Ny, Nz}, rhs::Abstrac
     _Nt = size(phi)[3]
 
     # intialise intermediate vectors
-    _rhs = Vector{T}(undef, Ny)
+    _rhs = [Vector{T}(undef, Ny) for i in 1:Base.Threads.nthreads()]
 
     # loop over temporal and spanwise wavenumbers
-    for nt in 1:_Nt, nz in 1:((Nz >> 1) + 1)
-        # impose boundary conditions
-        _rhs .= rhs[:, nz, nt]
-        _rhs[1] = bc_data[1][nz, nt]
-        _rhs[Ny] = bc_data[2][nz, nt]
+    @inbounds begin
+        Threads.@threads for nt in 1:_Nt
+            id = Base.Threads.threadid()
+            @views for nz in 1:((Nz >> 1) + 1)
+                # impose boundary conditions
+                _rhs[id] .= rhs[:, nz, nt]
+                _rhs[id][1] = bc_data[1][nz, nt]
+                _rhs[id][Ny] = bc_data[2][nz, nt]
 
-        # solve the poisson equation
-        LinearAlgebra.ldiv!(laplace.lus[nz], _rhs)
+                # solve the poisson equation
+                LinearAlgebra.ldiv!(laplace.lus[nz], _rhs[id])
 
-        # assign the solution to the input matrix
-        phi[:, nz, nt] .= _rhs
+                # assign the solution to the input matrix
+                phi[:, nz, nt] .= _rhs[id]
+            end
+        end
     end
 
     return phi
