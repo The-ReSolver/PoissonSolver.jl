@@ -26,8 +26,7 @@ end
     # chebyshev points and differentiation matrix
     y = chebpts(Ny)
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    D2 = DiffMatrix(y, 3, 1)
-    DD2 = DiffMatrix(y, 3, 2)
+    D2 = DiffMatrix(y, 3, 1); DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
@@ -70,8 +69,7 @@ end
     # chebyshev points and differentiation matrix
     y = chebpts(Ny)
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    D2 = DiffMatrix(y, 5, 1)
-    DD2 = DiffMatrix(y, 5, 2)
+    D2 = DiffMatrix(y, 5, 1); DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
@@ -120,8 +118,7 @@ end
     # chebyshev points and differentiation matrix
     y = chebpts(Ny)
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    D2 = DiffMatrix(y, 3, 1)
-    DD2 = DiffMatrix(y, 3, 2)
+    D2 = DiffMatrix(y, 3, 1); DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
@@ -171,8 +168,7 @@ end
     # chebyshev points and differentiation matrix
     y = chebpts(Ny)
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
-    D2 = DiffMatrix(y, 5, 1)
-    DD2 = DiffMatrix(y, 5, 2)
+    D2 = DiffMatrix(y, 5, 1); DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
     grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
