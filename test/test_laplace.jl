@@ -20,16 +20,17 @@ end
 
 @testset "Dirichlet homogeneous BC solution     " begin
     # initialise constants
-    β = 1.0
+    β = 1.0; ω = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
     y = chebpts(Ny)
+    # ! chebyshev differentiation matrices don't work with lapack keyword argument !
     # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
     D2 = DiffMatrix(y, 3, 1); DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
-    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, ω)
 
     # initialise Laplace operators
     # laplace = Laplace(Ny, Nz, β, DD2, :banded)
@@ -63,7 +64,7 @@ end
 
 @testset "Neumann homogeneous BC solution       " begin
     # initialise constants
-    β = 1.0
+    β = 1.0; ω = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
@@ -72,7 +73,7 @@ end
     D2 = DiffMatrix(y, 5, 1); DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
-    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, ω)
 
     # initialise Laplace operators
     # laplace = Laplace(Ny, Nz, β, DD2, D2, :banded)
@@ -112,7 +113,7 @@ end
 
 @testset "Dirichlet inhomogeneous BC solution   " begin
     # initialise constants
-    β = 1.0
+    β = 1.0; ω = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
@@ -121,7 +122,7 @@ end
     D2 = DiffMatrix(y, 3, 1); DD2 = DiffMatrix(y, 3, 2)
 
     # initialise grid
-    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, ω)
 
     # initialise Laplace operators
     # laplace = Laplace(Ny, Nz, β, DD2, :banded)
@@ -162,7 +163,7 @@ end
 
 @testset "Neumann inhomogeneous BC solution     " begin
     # initialise constants
-    β = 1.0
+    β = 1.0; ω = 1.0
     Ny = 64; Nz = 64; Nt = 64
 
     # chebyshev points and differentiation matrix
@@ -171,7 +172,7 @@ end
     D2 = DiffMatrix(y, 5, 1); DD2 = DiffMatrix(y, 5, 2)
 
     # initialise grid
-    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, 0.0)
+    grid = Grid(y, Nz, Nt, D2, DD2, rand(Ny), β, ω)
 
     # initialise Laplace operators
     # laplace = Laplace(Ny, Nz, β, DD2, D2, :banded)
