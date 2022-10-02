@@ -4,13 +4,13 @@ using BenchmarkTools
 
 using PoissonSolver
 using Fields
-using ChebUtils
+# using ChebUtils
 using FDGrids
 
 # setup fields
 β = 1.0
 Ny = 64; Nz = 64; Nt = 64
-y = chebpts(Ny)
+y = gridpoints(Ny)
 # D2 = chebdiff(Ny); DD2 = chebddiff(Ny)
 D2 = DiffMatrix(y, 5, 1)
 DD2 = DiffMatrix(y, 5, 2)
